@@ -1,0 +1,88 @@
+### Register User
+POST http://localhost:8080/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "password123",
+  "smtpHost": "smtp.gmail.com",
+  "smtpPort": 587,
+  "smtpUser": "test@example.com",
+  "smtpPassword": "your-app-password",
+  "fromEmail": "test@example.com",
+  "useTLS": true
+}
+
+###
+
+### Register User (No SMTP - Use Default)
+POST http://localhost:8080/register
+Content-Type: application/json
+
+{
+  "email": "test2@example.com",
+  "password": "password123"
+}
+
+###
+
+### Login
+POST http://localhost:8080/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "password123"
+}
+
+###
+
+### Health Check
+GET http://localhost:8080/health
+
+###
+
+### Update Email TTL
+PUT http://localhost:8080/user/settings/email-ttl
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+Content-Type: application/json
+
+{
+  "emailLogTTLDays": 60
+}
+
+###
+
+### Get Email Logs
+GET http://localhost:8080/user/email-logs
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+###
+
+### Send Email (Webhook)
+POST http://localhost:8080/webhook/send-email
+x-api-key: YOUR_API_KEY_HERE
+Content-Type: application/json
+
+{
+  "to": "recipient@example.com",
+  "subject": "Test Email",
+  "body": "This is a test email sent via the webhook!",
+  "isHTML": false
+}
+
+###
+
+### Send HTML Email (Webhook)
+POST http://localhost:8080/webhook/send-email
+x-api-key: YOUR_API_KEY_HERE
+Content-Type: application/json
+
+{
+  "to": "recipient@example.com",
+  "subject": "HTML Test Email",
+  "body": "<h1>Hello!</h1><p>This is an <strong>HTML</strong> email.</p>",
+  "isHTML": true
+}
+
+###
