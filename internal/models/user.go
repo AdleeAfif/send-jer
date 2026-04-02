@@ -6,10 +6,16 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+const (
+	RoleAdmin = "admin"
+	RoleUser  = "user"
+)
+
 // User represents a user in the system
 type User struct {
 	ID                primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	Email             string             `bson:"email" json:"email"`
+	Role              string             `bson:"role" json:"role"`
 	PasswordHash      string             `bson:"passwordHash" json:"-"`
 	SMTPHost          string             `bson:"smtpHost,omitempty" json:"smtpHost,omitempty"`
 	SMTPPort          int                `bson:"smtpPort,omitempty" json:"smtpPort,omitempty"`
@@ -50,4 +56,10 @@ type LoginResponse struct {
 // UpdateTTLRequest represents request to update email log TTL
 type UpdateTTLRequest struct {
 	EmailLogTTLDays int `json:"emailLogTTLDays" validate:"gte=0"`
+}
+
+// UpdateUserRequest represents admin updates to a managed user.
+type UpdateUserRequest struct {
+	Role            string `json:"role,omitempty"`
+	EmailLogTTLDays *int   `json:"emailLogTTLDays,omitempty"`
 }

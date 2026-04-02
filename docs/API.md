@@ -2,9 +2,16 @@
 
 ## Base URL
 
-```
+```text
 http://localhost:8080
 ```
+
+## Roles
+
+- `admin`: Can manage users and also use the normal self-service/email operations.
+- `user`: Can update their own settings and use email operations.
+
+The first registered account becomes `admin`. All later registrations become `user`.
 
 ## Authentication
 
@@ -20,12 +27,12 @@ Create a new user account.
 {
   "email": "user@example.com",
   "password": "securepassword",
-  "smtpHost": "smtp.gmail.com", // Optional
-  "smtpPort": 587, // Optional
-  "smtpUser": "user@example.com", // Optional
-  "smtpPassword": "app-password", // Optional
-  "fromEmail": "user@example.com", // Optional
-  "useTLS": true // Optional
+  "smtpHost": "smtp.gmail.com",
+  "smtpPort": 587,
+  "smtpUser": "user@example.com",
+  "smtpPassword": "app-password",
+  "fromEmail": "user@example.com",
+  "useTLS": true
 }
 ```
 
@@ -38,6 +45,7 @@ Create a new user account.
   "user": {
     "id": "user-id",
     "email": "user@example.com",
+    "role": "user",
     "emailLogTTLDays": 30,
     "createdAt": "2026-01-20T12:00:00Z"
   }
@@ -65,21 +73,27 @@ Authenticate and get JWT token.
 {
   "token": "jwt-token-here",
   "apiKey": "your-api-key-here",
-  "user": { ... }
+  "user": {
+    "id": "user-id",
+    "email": "user@example.com",
+    "role": "user"
+  }
 }
 ```
 
 ## User Endpoints
 
+These endpoints are available to authenticated `user` and `admin` accounts for their own data.
+
 ### Update Email Log TTL
 
-Update how long email logs are retained.
+Update how long your email logs are retained.
 
 **Endpoint:** `PUT /user/settings/email-ttl`
 
 **Headers:**
 
-```
+```text
 Authorization: Bearer <jwt-token>
 ```
 
@@ -91,7 +105,7 @@ Authorization: Bearer <jwt-token>
 }
 ```
 
-_Note: Set to 0 to never delete logs_
+Set `0` to never delete logs.
 
 **Response:**
 
@@ -104,13 +118,13 @@ _Note: Set to 0 to never delete logs_
 
 ### Get Email Logs
 
-Retrieve your email sending history.
+Retrieve your own email sending history.
 
 **Endpoint:** `GET /user/email-logs`
 
 **Headers:**
 
-```
+```text
 Authorization: Bearer <jwt-token>
 ```
 
@@ -135,17 +149,73 @@ Authorization: Bearer <jwt-token>
 }
 ```
 
+## Admin Endpoints
+
+These endpoints require an authenticated `admin` account.
+
+### List Users
+
+**Endpoint:** `GET /admin/users`
+
+**Headers:**
+
+```text
+Authorization: Bearer <admin-jwt-token>
+```
+
+### Get User
+
+**Endpoint:** `GET /admin/users/{id}`
+
+**Headers:**
+
+```text
+Authorization: Bearer <admin-jwt-token>
+```
+
+### Update User
+
+Update a user's role and/or email log TTL.
+
+**Endpoint:** `PUT /admin/users/{id}`
+
+**Headers:**
+
+```text
+Authorization: Bearer <admin-jwt-token>
+Content-Type: application/json
+```
+
+**Request Body:**
+
+```json
+{
+  "role": "admin",
+  "emailLogTTLDays": 90
+}
+```
+
+### Delete User
+
+**Endpoint:** `DELETE /admin/users/{id}`
+
+**Headers:**
+
+```text
+Authorization: Bearer <admin-jwt-token>
+```
+
 ## Webhook Endpoints
 
 ### Send Email
 
-Send an email via webhook.
+Send an email via webhook using the caller's API key.
 
 **Endpoint:** `POST /webhook/send-email`
 
 **Headers:**
 
-```
+```text
 x-api-key: your-api-key-here
 Content-Type: application/json
 ```
@@ -173,15 +243,7 @@ Content-Type: application/json
 
 ## Error Responses
 
-All endpoints may return error responses in this format:
-
-**Status:** 400, 401, 500, etc.
-
-**Body:**
-
-```
-Error message as plain text
-```
+All endpoints may return plain-text error responses.
 
 ## Common Status Codes
 
@@ -190,34 +252,6 @@ Error message as plain text
 - `202 Accepted` - Request accepted (async processing)
 - `400 Bad Request` - Invalid request body or parameters
 - `401 Unauthorized` - Authentication failed
+- `403 Forbidden` - Role does not have access
+- `404 Not Found` - User not found
 - `500 Internal Server Error` - Server error
-
-## Rate Limiting
-
-Currently no rate limiting is implemented. Consider adding rate limiting in production.
-
-## SMTP Configuration
-
-### Using Default SMTP
-
-If you don't provide SMTP credentials during registration, the service will use the default SMTP configured in `.env`.
-
-### Using Custom SMTP
-
-Provide your SMTP credentials during registration. The password will be encrypted before storage.
-
-### Gmail Example
-
-For Gmail, you need to:
-
-1. Enable 2FA
-2. Generate an App Password
-3. Use `smtp.gmail.com` with port `587`
-
-## Security Notes
-
-1. **HTTPS**: Always use HTTPS in production
-2. **API Keys**: Keep your API key secure - it's like a password
-3. **JWT Tokens**: Tokens expire after 24 hours
-4. **SMTP Passwords**: Encrypted using AES-256-GCM
-5. **Environment Variables**: Never commit `.env` to version control

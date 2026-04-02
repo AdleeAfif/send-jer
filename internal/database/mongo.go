@@ -2,11 +2,14 @@ package database
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 
 	"send-jer/config"
 )
@@ -18,29 +21,41 @@ var (
 
 // Connect establishes connection to MongoDB
 func Connect() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	timeout := time.Duration(config.AppConfig.MongoConnectTimeoutSeconds) * time.Second
+	if timeout <= 0 {
+		timeout = 30 * time.Second
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	clientOptions := options.Client().ApplyURI(config.AppConfig.MongoURI)
+	clientOptions := options.Client().
+		ApplyURI(config.AppConfig.MongoURI).
+		SetConnectTimeout(timeout).
+		SetServerSelectionTimeout(timeout)
+
+	log.Printf("Connecting to MongoDB database %q via hosts: %s", config.AppConfig.MongoDatabase, strings.Join(clientOptions.Hosts, ", "))
+
 	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
-		return err
+		return wrapMongoError("connect", err, clientOptions.Hosts)
 	}
 
 	// Ping the database
-	err = client.Ping(ctx, nil)
+	err = client.Ping(ctx, readpref.Primary())
 	if err != nil {
-		return err
+		_ = client.Disconnect(context.Background())
+		return wrapMongoError("ping", err, clientOptions.Hosts)
 	}
 
 	Client = client
 	Database = client.Database(config.AppConfig.MongoDatabase)
-	
+
 	log.Println("Connected to MongoDB successfully")
-	
+
 	// Create indexes
 	createIndexes()
-	
+
 	return nil
 }
 
@@ -49,10 +64,10 @@ func Disconnect() error {
 	if Client == nil {
 		return nil
 	}
-	
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	
+
 	return Client.Disconnect(ctx)
 }
 
@@ -89,4 +104,19 @@ func createIndexes() {
 	})
 
 	log.Println("Database indexes created successfully")
+}
+
+func wrapMongoError(operation string, err error, hosts []string) error {
+	message := fmt.Sprintf("mongo %s failed for hosts [%s]: %v", operation, strings.Join(hosts, ", "), err)
+	errText := err.Error()
+
+	if strings.Contains(errText, "ReplicaSetNoPrimary") {
+		message += ". Atlas has no reachable primary from this app. Common causes are a paused cluster, an IP allow-list/firewall problem, or a VPN/proxy/TLS inspection layer breaking the handshake to some replica-set members"
+	}
+
+	if strings.Contains(errText, "tls: internal error") {
+		message += ". The TLS handshake is being rejected by the remote side; verify Atlas network access for this machine, remove any TLS-inspecting proxy/VPN, and confirm the cluster is healthy"
+	}
+
+	return fmt.Errorf("%s", message)
 }

@@ -1,15 +1,15 @@
 version: "3.8"
 
 services:
-  mongodb:
-    image: mongo:latest
-    restart: always
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-    environment:
-      - MONGO_INITDB_DATABASE=email_webhook_service
+  # mongodb:
+  #   image: mongo:latest
+  #   restart: always
+  #   ports:
+  #     - "27017:27017"
+  #   volumes:
+  #     - mongodb_data:/data/db
+  #   environment:
+  #     - MONGO_INITDB_DATABASE=email_webhook_service
 
   send-jer:
     build: .
@@ -33,5 +33,5 @@ services:
       - WORKER_CONCURRENCY=${WORKER_CONCURRENCY:-5}
       - CLEANUP_CRON_SCHEDULE=${CLEANUP_CRON_SCHEDULE:-0 0 * * *}
 
-volumes:
-  mongodb_data:
+# volumes:
+#   mongodb_data:

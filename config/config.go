@@ -13,8 +13,9 @@ type Config struct {
 	Port string
 
 	// MongoDB
-	MongoURI      string
-	MongoDatabase string
+	MongoURI                   string
+	MongoDatabase              string
+	MongoConnectTimeoutSeconds int
 
 	// JWT
 	JWTSecret string
@@ -23,12 +24,12 @@ type Config struct {
 	EncryptionKey string
 
 	// Default SMTP
-	DefaultSMTPHost     string
-	DefaultSMTPPort     int
-	DefaultSMTPUser     string
-	DefaultSMTPPass     string
-	DefaultFromEmail    string
-	DefaultUseTLS       bool
+	DefaultSMTPHost  string
+	DefaultSMTPPort  int
+	DefaultSMTPUser  string
+	DefaultSMTPPass  string
+	DefaultFromEmail string
+	DefaultUseTLS    bool
 
 	// Worker
 	WorkerConcurrency int
@@ -44,19 +45,20 @@ func LoadConfig() {
 	_ = godotenv.Load()
 
 	AppConfig = &Config{
-		Port:                getEnv("PORT", "8080"),
-		MongoURI:            getEnv("MONGODB_URI", "mongodb://localhost:27017"),
-		MongoDatabase:       getEnv("MONGODB_DATABASE", "email_webhook_service"),
-		JWTSecret:           getEnv("JWT_SECRET", "change-this-secret"),
-		EncryptionKey:       getEnv("ENCRYPTION_KEY", "change-this-32-byte-key-please"),
-		DefaultSMTPHost:     getEnv("DEFAULT_SMTP_HOST", "smtp.gmail.com"),
-		DefaultSMTPPort:     getEnvAsInt("DEFAULT_SMTP_PORT", 587),
-		DefaultSMTPUser:     getEnv("DEFAULT_SMTP_USER", ""),
-		DefaultSMTPPass:     getEnv("DEFAULT_SMTP_PASS", ""),
-		DefaultFromEmail:    getEnv("DEFAULT_FROM_EMAIL", ""),
-		DefaultUseTLS:       getEnvAsBool("DEFAULT_USE_TLS", true),
-		WorkerConcurrency:   getEnvAsInt("WORKER_CONCURRENCY", 5),
-		CleanupCronSchedule: getEnv("CLEANUP_CRON_SCHEDULE", "0 0 * * *"),
+		Port:                       getEnv("PORT", "8080"),
+		MongoURI:                   getEnv("MONGODB_URI", "mongodb://localhost:27017"),
+		MongoDatabase:              getEnv("MONGODB_DATABASE", "email_webhook_service"),
+		MongoConnectTimeoutSeconds: getEnvAsInt("MONGODB_CONNECT_TIMEOUT_SECONDS", 30),
+		JWTSecret:                  getEnv("JWT_SECRET", "change-this-secret"),
+		EncryptionKey:              getEnv("ENCRYPTION_KEY", "change-this-32-byte-key-please"),
+		DefaultSMTPHost:            getEnv("DEFAULT_SMTP_HOST", "smtp.gmail.com"),
+		DefaultSMTPPort:            getEnvAsInt("DEFAULT_SMTP_PORT", 587),
+		DefaultSMTPUser:            getEnv("DEFAULT_SMTP_USER", ""),
+		DefaultSMTPPass:            getEnv("DEFAULT_SMTP_PASS", ""),
+		DefaultFromEmail:           getEnv("DEFAULT_FROM_EMAIL", ""),
+		DefaultUseTLS:              getEnvAsBool("DEFAULT_USE_TLS", true),
+		WorkerConcurrency:          getEnvAsInt("WORKER_CONCURRENCY", 5),
+		CleanupCronSchedule:        getEnv("CLEANUP_CRON_SCHEDULE", "0 0 * * *"),
 	}
 
 	log.Println("Configuration loaded successfully")

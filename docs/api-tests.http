@@ -1,26 +1,26 @@
-### Register User
+### Register First User (Becomes Admin)
 POST http://localhost:8080/register
 Content-Type: application/json
 
 {
-  "email": "test@example.com",
+  "email": "admin@example.com",
   "password": "password123",
   "smtpHost": "smtp.gmail.com",
   "smtpPort": 587,
-  "smtpUser": "test@example.com",
+  "smtpUser": "admin@example.com",
   "smtpPassword": "your-app-password",
-  "fromEmail": "test@example.com",
+  "fromEmail": "admin@example.com",
   "useTLS": true
 }
 
 ###
 
-### Register User (No SMTP - Use Default)
+### Register Additional User (Becomes User)
 POST http://localhost:8080/register
 Content-Type: application/json
 
 {
-  "email": "test2@example.com",
+  "email": "user@example.com",
   "password": "password123"
 }
 
@@ -31,7 +31,7 @@ POST http://localhost:8080/login
 Content-Type: application/json
 
 {
-  "email": "test@example.com",
+  "email": "admin@example.com",
   "password": "password123"
 }
 
@@ -42,7 +42,7 @@ GET http://localhost:8080/health
 
 ###
 
-### Update Email TTL
+### Update Own Email TTL
 PUT http://localhost:8080/user/settings/email-ttl
 Authorization: Bearer YOUR_JWT_TOKEN_HERE
 Content-Type: application/json
@@ -53,9 +53,39 @@ Content-Type: application/json
 
 ###
 
-### Get Email Logs
+### Get Own Email Logs
 GET http://localhost:8080/user/email-logs
 Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+###
+
+### Admin - List Users
+GET http://localhost:8080/admin/users
+Authorization: Bearer YOUR_ADMIN_JWT_TOKEN_HERE
+
+###
+
+### Admin - Get User
+GET http://localhost:8080/admin/users/USER_ID_HERE
+Authorization: Bearer YOUR_ADMIN_JWT_TOKEN_HERE
+
+###
+
+### Admin - Promote User or Update TTL
+PUT http://localhost:8080/admin/users/USER_ID_HERE
+Authorization: Bearer YOUR_ADMIN_JWT_TOKEN_HERE
+Content-Type: application/json
+
+{
+  "role": "admin",
+  "emailLogTTLDays": 90
+}
+
+###
+
+### Admin - Delete User
+DELETE http://localhost:8080/admin/users/USER_ID_HERE
+Authorization: Bearer YOUR_ADMIN_JWT_TOKEN_HERE
 
 ###
 
